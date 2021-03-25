@@ -237,8 +237,21 @@ int lex_analyze(char *args, int print)
           fscanf(input, "%c", &futureChar);
           if (futureChar == '*')
             isComment = true;
-          else
-            fseek(input, -1, SEEK_CUR);
+            else
+            {
+              recent[0] = character;
+              recent[1] = 0;
+
+              token = CheckTokenNum(recent);
+
+              if (print)
+                printf("%10s\t\t%d\n", recent, token);
+
+              sprintf(conversion, "%d ", token);
+              strncat(tokenList, conversion, strlen(conversion));
+
+              fseek(input, -1, SEEK_CUR);
+            }
         }
         else if (character == '*')
         {
@@ -248,6 +261,8 @@ int lex_analyze(char *args, int print)
           else
           {
             recent[0] = character;
+            recent[1] = 0;
+
             token = CheckTokenNum(recent);
 
             if (print)
@@ -295,7 +310,21 @@ int lex_analyze(char *args, int print)
             //printf("Adding %s to tokenList\n", conversion);
           }
           else
+          {
+            // This is in fact a less than symbol
+            recent[0] = character;
+            recent[1] = 0;
+
+            token = CheckTokenNum(recent);
+
+            if (print)
+              printf("%10s\t\t%d\n", recent, token);
+
+            sprintf(conversion, "%d ", token);
+            strncat(tokenList, conversion, strlen(conversion));
+
             fseek(input, -1, SEEK_CUR);
+          }
         }
         else if (character == '>')
         {
@@ -314,7 +343,21 @@ int lex_analyze(char *args, int print)
             //printf("Adding %s to tokenList\n", conversion);
           }
           else
+          {
+            // This is in fact a greater than symbol
+            recent[0] = character;
+            recent[1] = 0;
+
+            token = CheckTokenNum(recent);
+
+            if (print)
+              printf("%10s\t\t%d\n", recent, token);
+
+            sprintf(conversion, "%d ", token);
+            strncat(tokenList, conversion, strlen(conversion));
+
             fseek(input, -1, SEEK_CUR);
+          }
         }
         else
         {
@@ -423,10 +466,7 @@ bool EndOfWord(char character)
   for (int i = 0; i < strlen(specialCharacters); i++)
   {
     if (character == specialCharacters[i])
-    {
-      printf("This is special character %c\n", character);
       return true;
-    }
   }
 
   return false;
@@ -472,7 +512,6 @@ bool IsVar(char *word)
 int CheckTokenNum(char *word)
 {
   // this is really ugly I'm not a fan of this but idk what else to do don't sue me
-  printf("~~Checking token of %s\n", word);
   if (strcmp(word, "%") == 0)
     return 1;
   else if (strcmp(word, "+") == 0)
@@ -557,5 +596,6 @@ int CheckTokenNum(char *word)
 
   }
 
+  printf("For some reason, I couldn't find anything for %s", word);
   return -1;
 }

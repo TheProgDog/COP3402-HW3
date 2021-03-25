@@ -131,6 +131,12 @@ int program(FILE *input, int print)
 
   FILE *output = fopen("Output/parseOutput.txt", "w");
 
+  if (print)
+  {
+    printf("Generated Assembly:\n");
+    printf("Line\tOP\tL\tM\n");
+  }
+
   for (int i = 0; i < linePointer; i++)
   {
     if (print)
@@ -149,11 +155,7 @@ int block (FILE *input)
 {
   int constResult = declConst(input);
 
-  printf("Did I make it out of declConst?\n");
-
   int varNum = declVar(input);
-
-  printf("I made it out of declVar with %d\n", varNum);
 
   emit(6, "INC", 0, (4+varNum));
 
@@ -224,8 +226,6 @@ int declConst(FILE *input)
       symbol_table[symPointer].level = 0;
       symbol_table[symPointer].addr = 0;
 
-      printf("Line %d: Value is %d\n", __LINE__, token);
-
       symPointer++;
 
       scanWord(input);
@@ -245,8 +245,6 @@ int declConst(FILE *input)
 // Returns # of variables
 int declVar(FILE *input)
 {
-  printf("Currently in line %d with word %s\n", __LINE__, word);
-
   int numVars = 0, namePointer = 0;
 
   char name[12];
@@ -255,8 +253,6 @@ int declVar(FILE *input)
     name[i] = 0;
 
   scanWord(input);
-
-  printf("Currently in line %d with word %s\n", __LINE__, word);
 
   if (token == varsym)
   {
@@ -359,13 +355,12 @@ int statement(FILE *input)
 {
   int index = 0, jpcIndex = 0, loopIndex = 0;
 
-  printf("Token : %d\n", token);
   switch(token)
   {
     case identsym:
-      index = symTableCheck(word);
+      scanWord(input);
 
-      printf("I found %s at %d", word, index);
+      index = symTableCheck(word);
 
       if (index == -1)
       {
@@ -408,7 +403,7 @@ int statement(FILE *input)
 
       if (token != endsym)
       {
-        printf("Error : begin must be followed by end\n");
+        printf("Error : begin must be followed by end %s\n", word);
         return -1;
       }
 
@@ -466,16 +461,11 @@ int statement(FILE *input)
     case readsym:
       scanWord(input);
 
-      printf("I'm reading %s\n", word);
-
       if (token != identsym)
       {
         printf("Error : const, var, and read keywords must be followed by identifier\n");
         return -1;
       }
-
-
-      printf("Word at %d: %s\n", __LINE__, word);
 
       scanWord(input);
       index = symTableCheck(word);
@@ -512,7 +502,6 @@ int statement(FILE *input)
       if (token == endsym)
         return 1;
 
-      printf("Word at line %d: %d\n", __LINE__, token);
       return -1;
   }
 }
@@ -520,8 +509,6 @@ int statement(FILE *input)
 // CONDITION
 int condition(FILE *input)
 {
-  scanWord(input);
-
   if (token == oddsym)
   {
     scanWord(input);
@@ -583,7 +570,9 @@ int expression(FILE *input)
     scanWord(input);
 
     if (term(input) == -1)
+    {
       return -1;
+    }
 
     emit(2, "OPR", 0, 1);
 
@@ -593,14 +582,18 @@ int expression(FILE *input)
       {
         scanWord(input);
         if (term(input) == -1)
+        {
           return -1;
+        }
         emit(2, "OPR", 0, 2);
       }
       else
       {
         scanWord(input);
         if (term(input) == -1)
+        {
           return -1;
+        }
         emit(2, "OPR", 0, 3);
       }
     } // end while plussym/minussym loop
@@ -612,7 +605,9 @@ int expression(FILE *input)
       scanWord(input);
 
     if (term(input) == -1)
+    {
       return -1;
+    }
 
     while (token == plussym || token == minussym)
     {
@@ -620,14 +615,18 @@ int expression(FILE *input)
       {
         scanWord(input);
         if (term(input) == -1)
+        {
           return -1;
+        }
         emit(2, "OPR", 0, 2);
       }
       else
       {
         scanWord(input);
         if (term(input) == -1)
+        {
           return -1;
+        }
         emit(2, "OPR", 0, 3);
       }
     } // end while plussym/minussym loop
@@ -641,7 +640,9 @@ int expression(FILE *input)
 int term(FILE *input)
 {
   if (fact(input) == -1)
+  {
     return -1;
+  }
 
   while (token == multsym || token == slashsym || token == modsym)
   {
@@ -666,7 +667,7 @@ int term(FILE *input)
         emit(2, "OPR", 0, 7);
         break;
       default:
-        printf("Error : Unexpected token %d. Terminating program.\n", token);
+        printf("Error : Unexpected token %d. Line %d.\n", token, __LINE__);
         return -1;
     }
 
@@ -678,13 +679,15 @@ int term(FILE *input)
 // FACTOR
 int fact(FILE *input)
 {
+  int result = 0;
+
   switch (token)
   {
     case identsym:
       //// This isn't in the pseudocode, just wait and see if it works
-      scanWord(input);
 
-      int result = symTableCheck(word);
+      scanWord(input);
+      result = symTableCheck(word);
 
       if (result == -1)
       {
@@ -729,7 +732,7 @@ int fact(FILE *input)
 
       scanWord(input);
     default:
-      printf("Error : Unexpected token %d, word %s. Terminating program.\n", token, word);
+      printf("Error : Unexpected token %d. Line %d.\n", token, __LINE__);
       return -1;
   }
 

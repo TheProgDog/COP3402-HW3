@@ -207,7 +207,7 @@ int execute(int print)
         break;
       case 8:
         // pc <- line.M iff top of stack == 0
-        if (SP <= 0)
+        if (stack[SP] == 0)
           PC = line.M - 1;
 
         SP--;
@@ -230,8 +230,7 @@ int execute(int print)
               printf("Top of Stack Value: %d\n", pop(stack));
             break;
           case 2:
-            if (print)
-              printf("Please Enter an Integer: ");
+            printf("Please Enter an Integer: ");
             scanf("%d", &userInput);
 
             SP++;
